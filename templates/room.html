@@ -194,24 +194,65 @@
           </form>
         </div>
       </div>
-<script>
-    const socketURL = `ws://${window.location.host}/ws/messages/{{room_name}}/`;
-    console.log("Establishing Socket Connection")
-    const socket=new Socket(socketURL)
-    // Sned Message To Backend
-    const message_form=document.getElementById("msg-form")
-    message_form.addEventListener("submit",function(event){
-       event.preventDefault()
-       let message_sent = document.getElementById("message").value;
-       socket.send(
-         JSON.stringify({
-            message:message_sent,
-            room_name: "{{room_name}}",
-            sender:"{{user}}"
-         })
-       )
-    })
-    // Recieve Message from the backend
-</script>
+      <script>
+
+        const socketURL = `ws://${window.location.host}/ws/messages/{{room_name}}/`;
+        console.log("Establishing Socket Connection")
+        const socket = new WebSocket(socketURL)
+    
+        // Send Message to the backend
+        const message_form = document.getElementById("msg-form")
+        message_form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          // console.log("Sending Message")
+          let message_sent = document.getElementById("message").value;
+          // console.log("Sending... ", message_sent);
+          socket.send(
+            JSON.stringify({
+              message: message_sent,
+              room_name: "{{room_name}}",
+              sender: "{{user}}",
+            })
+          );
+        });
+    
+        const chats_div = document.getElementById("chats-container")
+    
+        // Scroll to bottom
+        const scrollToBottom = () => {
+          chats_div.scrollTop = chats_div.scrollHeight;
+        }
+    
+    
+        // Recieve Message from the backend
+        socket.addEventListener("message", (e) => {
+          const data = JSON.parse(e.data)["message"]
+    
+          console.log(data);
+    
+          let sender = data["sender"]
+          let content = data["message"]
+    
+          if (sender == "{{user}}") {
+            document.getElementById("message").value = ""
+          }
+    
+      
+          if (sender == "{{user}}") {
+            chats_div.innerHTML += `<div class="single-message sent">
+              <div class="msg-body">${content}</div>
+              <p class="sender">Me</p>
+            </div>`;
+          } else {
+            chats_div.innerHTML += `<div class="single-message">
+              <div class="msg-body">${content}</div>
+              <p class="sender">${sender}</p>
+            </div>`;
+          }
+    
+          scrollToBottom();
+    
+        });
+      </script>
 </body>
 </html>
